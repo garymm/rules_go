@@ -947,13 +947,18 @@ def cgo_context_data_impl(ctx):
 
 cgo_context_data = rule(
     implementation = cgo_context_data_impl,
-    attrs = CGO_ATTRS,
+    attrs = {
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+    } | CGO_ATTRS,
     toolchains = CGO_TOOLCHAINS,
     fragments = CGO_FRAGMENTS,
     doc = """Collects information about the C/C++ toolchain. The C/C++ toolchain
     is needed to build cgo code, but is generally optional. Rules can't have
     optional toolchains, so instead, we have an optional dependency on this
     rule.""",
+    cfg = non_request_nogo_transition,
 )
 
 def _cgo_context_data_proxy_impl(ctx):
