@@ -1,7 +1,7 @@
 workspace(name = "io_bazel_rules_go")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@io_bazel_rules_go//go:deps.bzl", "go_download_sdk", "go_register_nogo", "go_register_toolchains", "go_rules_dependencies")
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_nogo", "go_register_toolchains", "go_rules_dependencies")
 
 # Required by toolchains_protoc.
 http_archive(
@@ -53,15 +53,6 @@ go_rules_dependencies()
 
 go_register_toolchains(version = "1.24.0")
 
-# Required since nogo depends on golang.org/x/tools, which needs to be at
-# least version 0.30.0 to be compatible with Go 1.24, but references
-# types.Info.FileVersions, which was only added to Go 1.22.
-
-go_download_sdk(
-    name = "rules_go_internal_compatibility_sdk",
-    version = "1.22.12",
-)
-
 go_register_nogo(
     nogo = "@//internal:nogo",
 )
@@ -103,32 +94,6 @@ protoc_toolchains(
     name = "protoc_toolchains",
     version = "v25.3",
 )
-
-# An up-to-date version is required by com_google_protobuf below.
-http_archive(
-    name = "rules_python",
-    sha256 = "ca77768989a7f311186a29747e3e95c936a41dffac779aff6b443db22290d913",
-    strip_prefix = "rules_python-0.36.0",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.36.0/rules_python-0.36.0.tar.gz",
-)
-
-load("@rules_python//python:repositories.bzl", "py_repositories")
-
-py_repositories()
-
-http_archive(
-    name = "com_google_protobuf",
-    integrity = "sha256-zl0At4RQoMpAC/NgrADA1ZnMIl8EnZhqJ+mk45bFqEo=",
-    strip_prefix = "protobuf-29.0-rc2",
-    urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/v29.0-rc2.tar.gz",
-        "https://mirror.bazel.build/github.com/protocolbuffers/protobuf/archive/v29.0-rc2.tar.gz",
-    ],
-)
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
 
 # Used by //tests:buildifier_test.
 http_archive(
@@ -219,38 +184,10 @@ go_repository(
 )
 
 go_repository(
-    name = "org_golang_x_mod",
-    importpath = "golang.org/x/mod",
-    sum = "h1:D4nJWe9zXqHOmWqj4VMOJhvzj7bEZg4wEYa759z1pH4=",
-    version = "v0.22.0",
-)
-
-go_repository(
-    name = "org_golang_x_net",
-    importpath = "golang.org/x/net",
-    sum = "h1:P4fl1q7dY2hnZFxEk4pPSkDHF+QqjitcnDjUQyMM+pM=",
-    version = "v0.31.0",
-)
-
-go_repository(
-    name = "org_golang_x_sync",
-    importpath = "golang.org/x/sync",
-    sum = "h1:fEo0HyrW1GIgZdpbhCRO0PkJajUS5H9IFUztCgEo2jQ=",
-    version = "v0.9.0",
-)
-
-go_repository(
     name = "org_golang_x_oauth2",
     importpath = "golang.org/x/oauth2",
     sum = "h1:Lh8GPgSKBfWSwFvtuWOfeI3aAAnbXTSutYxJiOJFgIw=",
     version = "v0.6.0",
-)
-
-go_repository(
-    name = "org_golang_x_tools",
-    importpath = "golang.org/x/tools",
-    sum = "h1:qEKojBykQkQ4EynWy4S8Weg69NumxKdn40Fce3uc/8o=",
-    version = "v0.27.0",
 )
 
 http_archive(
@@ -260,16 +197,6 @@ http_archive(
     urls = [
         "https://github.com/googleapis/googleapis/archive/64926d52febbf298cb82a8f472ade4a3969ba922.zip",
     ],
-)
-
-go_repository(
-    name = "org_golang_google_genproto",
-    build_extra_args = ["-exclude=vendor"],
-    build_file_generation = "on",
-    build_file_proto_mode = "disable_global",
-    importpath = "google.golang.org/genproto",
-    sum = "h1:S9GbmC1iCgvbLyAokVCwiO6tVIrU9Y7c5oMx1V/ki/Y=",
-    version = "v0.0.0-20221024183307-1bc688fe9f3e",
 )
 
 load("@io_bazel_rules_go//tests/legacy/test_chdir:remote.bzl", "test_chdir_remote")
@@ -285,41 +212,12 @@ local_repository(
     path = "tests/core/runfiles/runfiles_remote_test",
 )
 
-# For API doc generation
-# This is a dev dependency, users should not need to install it
-# so we declare it in the WORKSPACE
-http_archive(
-    name = "io_bazel_stardoc",
-    sha256 = "3fd8fec4ddec3c670bd810904e2e33170bedfe12f90adf943508184be458c8bb",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/stardoc/releases/download/0.5.3/stardoc-0.5.3.tar.gz",
-        "https://github.com/bazelbuild/stardoc/releases/download/0.5.3/stardoc-0.5.3.tar.gz",
-    ],
-)
-
-load("@io_bazel_stardoc//:setup.bzl", "stardoc_repositories")
-
-stardoc_repositories()
-
 load(
     "@build_bazel_apple_support//lib:repositories.bzl",
     "apple_support_dependencies",
 )
 
 apple_support_dependencies()
-
-http_archive(
-    name = "rules_shell",
-    sha256 = "d8cd4a3a91fc1dc68d4c7d6b655f09def109f7186437e3f50a9b60ab436a0c53",
-    strip_prefix = "rules_shell-0.3.0",
-    url = "https://github.com/bazelbuild/rules_shell/releases/download/v0.3.0/rules_shell-v0.3.0.tar.gz",
-)
-
-load("@rules_shell//shell:repositories.bzl", "rules_shell_dependencies", "rules_shell_toolchains")
-
-rules_shell_dependencies()
-
-rules_shell_toolchains()
 
 load("@googleapis//:repository_rules.bzl", "switched_rules_by_language")
 
@@ -345,12 +243,4 @@ zig_toolchains(
         "macos-x86_64": "0c89e5d934ecbf9f4d2dea6e3b8dfcc548a3d4184a856178b3db74e361031a2b",
     },
     version = "0.11.0-dev.3886+0c1bfe271",
-)
-
-# Used to transition binaries in rules_go's test suite to different configurations.
-http_archive(
-    name = "with_cfg.bzl",
-    sha256 = "4da2d80d55c7013e52539b0e100f8f8465142cd05757aaecb3ddca962d735c05",
-    strip_prefix = "with_cfg.bzl-0.11.1",
-    url = "https://github.com/fmeum/with_cfg.bzl/releases/download/v0.11.1/with_cfg.bzl-v0.11.1.tar.gz",
 )
