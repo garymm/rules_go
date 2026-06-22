@@ -193,15 +193,6 @@ _reset_transition_dict = dict(_common_reset_transition_dict, **{
 
 _reset_transition_keys = sorted(_reset_transition_dict.keys())
 
-_stdlib_keep_keys = sorted([
-    "//go/config:msan",
-    "//go/config:race",
-    "//go/config:pure",
-    "//go/config:linkmode",
-    "//go/config:tags",
-    "//go/config:pgoprofile",
-])
-
 def _go_tool_transition_impl(settings, _attr):
     """Sets most Go settings to default values (use for external Go tools).
 
@@ -245,17 +236,18 @@ non_go_tool_transition = transition(
 )
 
 def _go_stdlib_transition_impl(settings, _attr):
-    """Sets all Go settings to their default values, except for those affecting the Go SDK.
+    """Configures //:stdlib dependencies.
 
-    This transition is similar to _non_go_tool_transition except that it keeps the
-    parts of the configuration that determine how to build the standard library.
-    It's used to consolidate the configurations used to build the standard library to limit
-    the number built.
+    go_stdlib_transition preserves each setting in
+    _common_reset_transition_dict except //go/config:tags. Changing another
+    setting could cause a Go rule and its //:stdlib dependency to resolve C++
+    runtime archives in different configurations, which could make GoLink
+    reference an archive that Bazel did not declare. go_stdlib_transition
+    filters //go/config:tags to _TAG_AFFECTS_STDLIB and sets
+    //go/private:bootstrap_nogo and
+    //command_line_option:collect_code_coverage to False.
     """
     settings = dict(settings)
-    for label, value in _reset_transition_dict.items():
-        if label not in _stdlib_keep_keys:
-            settings[label] = value
     settings["//go/config:tags"] = [t for t in settings["//go/config:tags"] if t in _TAG_AFFECTS_STDLIB]
     settings["//go/private:bootstrap_nogo"] = False
     settings["//command_line_option:collect_code_coverage"] = False
